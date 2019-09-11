@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns="http://logging.apache.org/log4j/2.0/config"
+  xsi:schemaLocation="http://logging.apache.org/log4j/2.0/config ">
+  <Appenders>
+    <Console name="STDOUT" target="SYSTEM_OUT">
+      <PatternLayout
+        pattern="%-5p | %X{ClientId} | %X{RequestId} | %d{yyyy-MM-dd HH:mm:ss} | [%t] %C - %m%n"/>
+    </Console>
+    <RollingFile fileName="logs/${hostName}_application.log"
+      filePattern="logs/archive/${hostName}_application-%d{yyyy-MM-dd}-%i.log.gz"
+      name="ApplicationLog">
+      <Jsonlayout compact="true" eventEol="true">
+        <KeyValuePair key="requestId" value="$${ctx:requestId:-null}"/>
+      </Jsonlayout>
+      <PatternLayout
+        pattern="%-5p | %X{ClientId} | %X{RequestId} | %d{yyyy-MM-dd HH:mm:ss} | [%t] %C{2} - %m%n"/>
+
+      <Policies>
+        <SizeBasedTriggeringPolicy size="500 MB"/>
+        <TimeBasedTriggeringPolicy interval="1"
+          modulate="true"/>
+      </Policies>
+    </RollingFile>
+    <RollingFile fileName="logs/${hostName}_request.log"
+      filePattern="$logs/archive/${hostName}_request-%d{yyyy-MM-dd}-%i.log.gz"
+      name="RequestLog">
+
+      <PatternLayout
+        pattern="%X{ServiceName} | %X{ClientId} | %X{RequestId} | %d{yyyy-MM-dd HH:mm:ss} | %m%n"/>
+      <Policies>
+        <SizeBasedTriggeringPolicy size="500 MB"/>
+        <TimeBasedTriggeringPolicy interval="1"
+          modulate="true"/>
+      </Policies>
+    </RollingFile>
+  </Appenders>
+
+  <Loggers>
+    <Logger level="WARN" name="org.apache"/>
+    <Logger level="WARN" name="httpclient"/>
+    <Logger
+      additivity="true"
+      level="DEBUG" name="com.example.configuration.aspect.LogAdvice">
+      <AppenderRef ref="RequestLog"/>
+      <AppenderRef ref="STDOUT"/>
+    </Logger>
+    <Root level="INFO">
+      <AppenderRef ref="STDOUT"/>
+      <AppenderRef ref="ApplicationLog"/>
+    </Root>
+  </Loggers>
+  <Properties>
+    <Property name="path">logs</Property>
+  </Properties>
+</Configuration>
